@@ -2,6 +2,7 @@ use crate::lexer::{Keyword, Token, TokenType};
 
 type TT = TokenType;
 const SINGLE_CHARS: &str = "(){}[].,;:";
+const DEFAULT_TYPES: &[&str] = &["i32", "f32", "bool", "char"];
 
 pub struct Lexer {
     pos: usize,
@@ -148,6 +149,8 @@ impl Lexer {
                     }
                     if let Ok(kw) = buffer.parse::<Keyword>() {
                         self.push(TT::Keyword(kw), start_line, start_col);
+                    } else if DEFAULT_TYPES.contains(&buffer.as_str()) {
+                        self.push(TT::Type(buffer), start_line, start_col);
                     } else {
                         self.push(TT::Id(buffer), start_line, start_col);
                     }

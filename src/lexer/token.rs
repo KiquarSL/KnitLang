@@ -2,6 +2,7 @@ use std::fmt;
 use std::str::FromStr;
 use strum::IntoEnumIterator;
 use strum_macros;
+
 #[derive(Debug, strum_macros::Display, Clone)]
 pub enum TokenType {
     #[strum(to_string = "+")]
@@ -72,7 +73,7 @@ pub enum TokenType {
     Bool(bool),
     Keyword(Keyword),
     Id(String),
-
+    Type(String),
     Eof,
 }
 
@@ -115,6 +116,6 @@ impl Token {
 
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}:{} {}", self.line, self.col, self.kind)
+        write!(f, " Token in {}:{} {:?}", self.line, self.col, self.kind)
     }
 }
