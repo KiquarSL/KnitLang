@@ -3,7 +3,7 @@ use std::str::FromStr;
 use strum::IntoEnumIterator;
 use strum_macros;
 
-#[derive(Debug, strum_macros::Display, Clone)]
+#[derive(Debug, strum_macros::Display, Clone, PartialEq)]
 pub enum TokenType {
     #[strum(to_string = "+")]
     Plus,
@@ -45,7 +45,7 @@ pub enum TokenType {
     RBracket,
 
     #[strum(to_string = "==")]
-    Equals,
+    Eq,
     #[strum(to_string = "!=")]
     Ne,
     #[strum(to_string = "!")]
@@ -58,6 +58,10 @@ pub enum TokenType {
     Le,
     #[strum(to_string = ">=")]
     Ge,
+    #[strum(to_string = "&&")]
+    And,
+    #[strum(to_string = "||")]
+    Or,
 
     #[strum(to_string = ":")]
     Colon,
@@ -77,7 +81,9 @@ pub enum TokenType {
     Eof,
 }
 
-#[derive(Debug, Clone, strum_macros::Display, strum_macros::EnumIter, strum_macros::EnumString)]
+#[derive(
+    Debug, Clone, strum_macros::Display, strum_macros::EnumIter, strum_macros::EnumString, PartialEq,
+)]
 pub enum Keyword {
     #[strum(to_string = "if")]
     If,
@@ -89,6 +95,8 @@ pub enum Keyword {
     For,
     #[strum(to_string = "while")]
     While,
+    #[strum(to_string = "return")]
+    Return,
 }
 
 impl Keyword {
@@ -101,11 +109,11 @@ impl Keyword {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Token {
-    kind: TokenType,
-    line: usize,
-    col: usize,
+    pub kind: TokenType,
+    pub line: usize,
+    pub col: usize,
 }
 
 impl Token {

@@ -1,4 +1,4 @@
-use crate::lexer::{Keyword, Token, TokenType};
+use crate::lexer::token::{Keyword, Token, TokenType};
 
 type TT = TokenType;
 const SINGLE_CHARS: &str = "(){}[].,;:";
@@ -60,6 +60,24 @@ impl Lexer {
                         self.push(TT::Plus, start_line, start_col);
                     }
                 }
+                '&' => {
+                    if self.peek(1) == Some('&') {
+                        self.push(TT::And, start_line, start_col);
+                        self.advance();
+                        self.advance();
+                    } else {
+                        break;
+                    }
+                }
+                '|' => {
+                    if self.peek(1) == Some('|') {
+                        self.push(TT::Or, start_line, start_col);
+                        self.advance();
+                        self.advance();
+                    } else {
+                        break;
+                    }
+                }
                 '-' => {
                     if self.peek(1) == Some('=') {
                         self.push(TT::MinusAssign, start_line, start_col);
@@ -103,7 +121,7 @@ impl Lexer {
                 }
                 '=' => {
                     if self.peek(1) == Some('=') {
-                        self.push(TT::Equals, start_line, start_col);
+                        self.push(TT::Eq, start_line, start_col);
                         self.advance();
                     } else {
                         self.push(TT::Assign, start_line, start_col);
@@ -149,6 +167,8 @@ impl Lexer {
                     }
                     if let Ok(kw) = buffer.parse::<Keyword>() {
                         self.push(TT::Keyword(kw), start_line, start_col);
+                    } else if buffer == "true" || buffer == "false" {
+                        self.push(TT::Bool(buffer == "true"), start_line, start_col);
                     } else if DEFAULT_TYPES.contains(&buffer.as_str()) {
                         self.push(TT::Type(buffer), start_line, start_col);
                     } else {
@@ -198,6 +218,7 @@ impl Lexer {
             }
             self.advance();
         }
+        self.push(TT::Eof, self.line, self.col);
         self.tokens
     }
 
