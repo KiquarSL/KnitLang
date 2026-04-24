@@ -1,12 +1,17 @@
-fn main() i32 {
+pkg main;
+
+use std::io;
+
+fn main() -> i32 {
     i32 a = 67;
     i32 b = 33;
+    i32 c = a + b;
     
-    c = a + b
+    imut bool is = c == 100;
     
-    bool is = c == 100
     if is {
-        c = 0
+        c = 0;
     }
-    return 0;
+    io::print("Hello, world");
+    ret 0;
 }

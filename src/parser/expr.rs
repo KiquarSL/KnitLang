@@ -1,11 +1,13 @@
 #[derive(Debug)]
 pub enum Expr {
     Number(f64),
+    Id(String),
     Arith(Box<Expr>, Op, Box<Expr>),
     Comp(Box<Expr>, CompOp, Box<Expr>),
     Logic(Box<Expr>, LogicOp, Box<Expr>),
     Unary(Unary, Box<Expr>),
     Bool(bool),
+    String(String),
 }
 
 #[derive(Debug)]

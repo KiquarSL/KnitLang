@@ -1,5 +1,4 @@
 use std::fmt;
-use std::str::FromStr;
 use strum::IntoEnumIterator;
 use strum_macros;
 
@@ -72,12 +71,16 @@ pub enum TokenType {
     #[strum(to_string = ".")]
     Dot,
 
+    #[strum(to_string = "->")]
+    Arrow,
+    #[strum(to_string = "::")]
+    Path,
+
     String(String),
     Number(f64),
     Bool(bool),
     Keyword(Keyword),
     Id(String),
-    Type(String),
     Eof,
 }
 
@@ -95,17 +98,19 @@ pub enum Keyword {
     For,
     #[strum(to_string = "while")]
     While,
-    #[strum(to_string = "return")]
-    Return,
+    #[strum(to_string = "ret")]
+    Ret,
+    #[strum(to_string = "imut")] // imutable
+    Imut,
+    #[strum(to_string = "pkg")]
+    Pkg,
+    #[strum(to_string = "use")]
+    Use,
 }
 
 impl Keyword {
     pub fn is_keyword(word: String) -> bool {
         Keyword::iter().any(|kw| kw.to_string() == word)
-    }
-
-    pub fn to_token(word: String) -> TokenType {
-        TokenType::Keyword(Self::from_str(&word.clone()).unwrap())
     }
 }
 
