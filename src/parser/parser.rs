@@ -1,5 +1,5 @@
 use crate::lexer::token::{Keyword, Token, TokenType};
-use crate::parser::ast::Stmt;
+use crate::parser::ast::{Block, Stmt};
 use crate::parser::expr::{CompOp, Expr, LogicOp, Op, Unary};
 
 type TT = TokenType;
@@ -231,9 +231,9 @@ impl Parser {
             (TT::Keyword(Keyword::While), _, _) => self.parse_while(),
             (TT::Keyword(Keyword::Ret), _, _) => self.parse_return(),
             (TT::Id(_), TT::Assign, _) => self.parse_assign(),
-            (TT::Id(_), TT::Path, _) => self.parse_call(),
-            (TT::Keyword(Keyword::Imut), TT::Id(_), TT::Id(_)) => self.parse_new_var(), // imut тип имя
-            (TT::Id(_), TT::Id(_), _) => self.parse_new_var(),                          // тип имя
+            (TT::Id(_), TT::LParen, _) => self.parse_call(),
+            (TT::Keyword(Keyword::Imut), TT::Id(_), TT::Id(_)) => self.parse_new_var(),
+            (TT::Id(_), TT::Id(_), _) => self.parse_new_var(),
             _ => panic!(
                 "Unexpected token at {}:{}",
                 self.peek(0).line,
@@ -250,24 +250,27 @@ impl Parser {
             | (TT::Keyword(Keyword::While), _)
             | (TT::Keyword(Keyword::Ret), _)
             | (TT::Id(_), TT::Assign)
-            | (TT::Id(_), TT::Path)
+            | (TT::Id(_), TT::LParen)
             | (TT::Id(_), TT::Id(_))
             | (TT::Keyword(Keyword::Imut), TT::Id(_)) => true,
             _ => false,
         }
     }
 
-    fn parse_block(&mut self) -> Vec<Stmt> {
-        let mut block = Vec::new();
-        while self.peek(0).kind != TT::Eof {
+    fn parse_block(&mut self) -> Block {
+        self.consume(TT::LBrace);
+        let mut stmts = Vec::new();
+        while self.peek(0).kind != TT::RBrace && self.peek(0).kind != TT::Eof {
             if self.is_statement() {
-                block.push(self.parse_stmt());
+                stmts.push(self.parse_stmt());
             } else {
                 break;
             }
         }
-        block
+        self.consume(TT::RBrace);
+        Block::new(stmts)
     }
+
     fn parse_fn(&mut self) -> Stmt {
         self.consume(TT::Keyword(Keyword::Fn));
         if let TokenType::Id(name) = self.peek(0).kind {
@@ -297,9 +300,7 @@ impl Parser {
                 return_type = Some(name);
                 self.advance();
             }
-            self.consume(TT::LBrace);
             let body = self.parse_block();
-            self.consume(TT::RBrace);
             return Stmt::Fn {
                 name,
                 args,
@@ -313,30 +314,24 @@ impl Parser {
     fn parse_if(&mut self) -> Stmt {
         self.consume(TT::Keyword(Keyword::If));
         let cond = self.expr();
-        self.consume(TT::LBrace);
         let then_body = self.parse_block();
-        let mut else_body: Option<Vec<Stmt>> = None;
-        self.consume(TT::RBrace);
-        if self.match_type(TT::Keyword(Keyword::Else)) {
-            self.consume(TT::LBrace);
-            else_body = Some(self.parse_block());
-            self.consume(TT::RBrace);
-        }
-        return Stmt::If {
+        let else_body = if self.match_type(TT::Keyword(Keyword::Else)) {
+            Some(self.parse_block())
+        } else {
+            None
+        };
+        Stmt::If {
             cond,
             then_body,
             else_body,
-        };
+        }
     }
 
     fn parse_while(&mut self) -> Stmt {
         self.consume(TT::Keyword(Keyword::While));
         let cond = self.expr();
-        self.consume(TT::LBrace);
         let body = self.parse_block();
-        self.consume(TT::RBrace);
-
-        return Stmt::While { cond, body };
+        Stmt::While { cond, body }
     }
 
     fn parse_pkg(&mut self) -> Stmt {
@@ -355,7 +350,11 @@ impl Parser {
     }
 
     fn parse_call(&mut self) -> Stmt {
-        let path = self.parse_path();
+        let name = match self.peek(0).kind {
+            TT::Id(ref id) => id.clone(),
+            _ => panic!("Expected id at {}:{}", self.peek(0).line, self.peek(0).col),
+        };
+        self.advance();
         self.consume(TT::LParen);
         let mut args = Vec::new();
 
@@ -370,7 +369,7 @@ impl Parser {
         self.consume(TT::RParen);
         self.match_type(TT::Semicolon);
 
-        Stmt::Call { path, args }
+        Stmt::Call { name, args }
     }
 
     fn parse_return(&mut self) -> Stmt {
