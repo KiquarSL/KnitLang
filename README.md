@@ -1,11 +1,20 @@
 # KnitLang
 > In developent
 
+Code .knit trasnlating to .c
+
+## Usage
+
+```
+knit <knit file>
+```
+
+
 ## Example
 ```rust
-pkg main;
 
-use std::io;
+
+use stdio
 
 fn main() -> i32 {
     i32 a = 67;
@@ -17,7 +26,7 @@ fn main() -> i32 {
     if is {
         c = 0;
     }
-    io::print("Hello, world");
+    printf("%s\n", "Hello, world");
     ret 0;
 }
 ```
