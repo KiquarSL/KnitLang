@@ -1,5 +1,5 @@
 # KnitLang
-> In developent
+> Project for learning lang-dev
 
 Code .knit trasnlating to .c
 
